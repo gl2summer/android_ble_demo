@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">android_ble_demo</string>
+    <string name="SCAN">SCAN</string>
+    <string name="STOP_SCAN">STOP SCAN</string>
 </resources>
