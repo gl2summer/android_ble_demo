@@ -4,8 +4,12 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.icu.text.LocaleDisplayNames;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,9 +19,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -37,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private Button btn_scan;
     private ListView lv_ble_list;
+    private EditText et_filter1, et_filter2;
 
     private List<Object> ble_devices_list = null;
     private BleAdapter lv_adapter = null;
@@ -48,6 +55,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
+        et_filter1 = (EditText) findViewById(R.id.filter1);
+        et_filter2 = (EditText) findViewById(R.id.filter2);
         btn_scan = (Button) findViewById(R.id.btn_scan);
         lv_ble_list = (ListView) findViewById(R.id.ble_list);
 
@@ -56,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ble_devices_list = new ArrayList<Object>();
         lv_adapter = new BleAdapter(MainActivity.this, R.layout.simple_expandable_list_item_1, ble_devices_list);
         lv_ble_list.setAdapter(lv_adapter);
+        lv_ble_list.setMinimumHeight(128);
         lv_ble_list.setOnItemClickListener(this);
 
         myBle = new MyBle(this, handler);
@@ -75,14 +87,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     boolean bExisted = false;
                     device = (BluetoothDevice) msg.obj;
                     //Toast.makeText(MainActivity.this, device.getName(), Toast.LENGTH_SHORT).show();
-                    for(Object object : ble_devices_list){
+                    List<String> filters = new ArrayList<String>();
+                    String filter1 = ""+et_filter1.getText().toString().trim();
+                    String filter2 = ""+et_filter2.getText().toString().trim();
+                    if(filter1.length() > 0)
+                        filters.add(filter1);
+                    if(filter2.length() > 0)
+                        filters.add(filter2);
+
+                    if(filters.size() != 0) {
+                        String device_name = "" + device.getName();
+                        int i;
+                        for (i = 0; i < filters.size(); i++) {
+                            String filter = filters.get(i);
+                            if (device_name.contains(filter))
+                                break;
+                        }
+                        if(i >= filters.size())
+                            break;
+                    }
+
+                    for (Object object : ble_devices_list) {
                         BluetoothDevice device_from_list = (BluetoothDevice) object;
-                        if(device_from_list.getAddress().equals(device.getAddress())){
+                        if (device_from_list.getAddress().equals(device.getAddress())) {
                             bExisted = true;
                             break;
                         }
                     }
-                    if(!bExisted){
+                    if (!bExisted) {
                         ble_devices_list.add(device);
                         lv_adapter.notifyDataSetChanged();
                     }
@@ -99,12 +131,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     btn_scan.setTextColor(getResources().getColor(android.R.color.black));
                     break;
                 case MyBle.BLE_DEVICE_CONNECTED:
-                    device = (BluetoothDevice) msg.obj;
+                    device = ((BluetoothGatt) msg.obj).getDevice();
                     Toast.makeText(getApplicationContext(), "connected to"+device.getName(), Toast.LENGTH_SHORT).show();
                     break;
                 case MyBle.BLE_DEVICE_DISCONNECTED:
-                    device = (BluetoothDevice) msg.obj;
+                    device = ((BluetoothGatt) msg.obj).getDevice();
                     Toast.makeText(getApplicationContext(), "disconnected from"+device.getName(), Toast.LENGTH_SHORT).show();
+                    break;
+                case MyBle.BLE_SERVICES_FOUND:
+                    BluetoothGatt gatt = (BluetoothGatt) msg.obj;
+                    List<BluetoothGattService> l = gatt.getServices();
+                    for(BluetoothGattService s:l){
+                        Log.d("service",""+s.getUuid());
+                        List<BluetoothGattCharacteristic> cs = s.getCharacteristics();
+                        for(BluetoothGattCharacteristic c:cs)
+                            Log.d("characteristic", ""+c.getUuid());
+                    }
                     break;
                 default:break;
             }

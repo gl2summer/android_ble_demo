@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
@@ -30,7 +32,7 @@ public class MyBle{
     public static final int BLE_SCAN_COMPLETED = 4;
     public static final int BLE_DEVICE_FOUND = 5;
     public static final int BLE_DEVICE_CONNECTED = 6;
-    public static final int BLE_CHARACTERISTIC_ACCESSIBLE = 7;
+    public static final int BLE_SERVICES_FOUND = 7;
     public static final int BLE_DEVICE_CONNECTING = 8;
     public static final int BLE_DEVICE_DISCONNECTED = 9;
     public static final int BLE_DATA_SENDED = 10;
@@ -93,10 +95,13 @@ public class MyBle{
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                if(newState == BluetoothProfile.STATE_CONNECTED)
-                    notifyOwner(BLE_DEVICE_CONNECTED, gatt.getDevice());
-                else
-                    notifyOwner(BLE_DEVICE_DISCONNECTED, gatt.getDevice());
+                if(newState == BluetoothProfile.STATE_CONNECTED) {
+                    notifyOwner(BLE_DEVICE_CONNECTED, gatt);
+                    gatt.discoverServices();
+                }
+                else {
+                    notifyOwner(BLE_DEVICE_DISCONNECTED, gatt);
+                }
             }
         }
 
@@ -104,6 +109,20 @@ public class MyBle{
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             super.onServicesDiscovered(gatt, status);
             notifyOwner(101,null);
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                //gatt.getServices();
+                /*BluetoothGattService service = gatt.getService(UUID.fromString(serviceUuid));
+                mCharacteristic = service.getCharacteristic(UUID.fromString(characterUuid));
+                mCharacteristicNotice = service.getCharacteristic(UUID.fromString(characterUuidNotice));
+
+                //开启通知
+                mBluetoothGatt.setCharacteristicNotification(mCharacteristicNotice, true);
+                BluetoothGattDescriptor descriptor = mCharacteristic.getDescriptor(UUID.fromString(clientUuid));
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                mBluetoothGatt.writeDescriptor(descriptor);*/
+
+                notifyOwner(BLE_SERVICES_FOUND, gatt);
+            }
         }
 
         @Override

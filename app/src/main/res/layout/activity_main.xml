@@ -22,14 +22,46 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <EditText
+        android:id="@+id/filter1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:focusable="auto"
+        android:inputType="textPersonName"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/btn_scan"
+        app:layout_constraintEnd_toStartOf="@+id/filter2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="@+id/btn_scan"
+        app:layout_constraintTop_toBottomOf="@+id/ble_list" />
+
+    <EditText
+        android:id="@+id/filter2"
+        android:layout_width="0dp"
+        android:layout_height="43dp"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:focusable="auto"
+        android:focusedByDefault="false"
+        android:inputType="textPersonName"
+        android:text=""
+        app:layout_constraintBottom_toTopOf="@+id/btn_scan"
+        app:layout_constraintEnd_toEndOf="@+id/btn_scan"
+        app:layout_constraintStart_toEndOf="@+id/filter1"
+        app:layout_constraintTop_toBottomOf="@+id/ble_list" />
+
     <ListView
         android:id="@+id/ble_list"
         android:layout_width="0dp"
-        android:layout_height="409dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_scan"
+        android:layout_height="0dp"
+        android:layout_margin="0dp"
+        android:fadingEdge="vertical"
+        android:fadingEdgeLength="0dp"
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/filter1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"

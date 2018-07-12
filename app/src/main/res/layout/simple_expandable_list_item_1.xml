@@ -20,5 +20,6 @@
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:gravity="center_vertical"
     android:paddingStart="?android:attr/expandableListPreferredItemPaddingLeft"
+    android:minHeight="?android:attr/listPreferredItemHeightSmall"
     android:textAlignment="viewStart"
     android:textAppearance="?android:attr/textAppearanceListItem" />
