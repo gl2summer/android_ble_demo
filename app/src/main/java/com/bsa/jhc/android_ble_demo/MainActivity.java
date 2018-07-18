@@ -38,6 +38,10 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
+    public static String serviceUuid = "0000ff00-0000-1000-8000-00805f9b34fb";
+    public static String characterUuid = "0000ff01-0000-1000-8000-00805f9b34fb";
+    public static String characterUuidNotice = "0000ff02-0000-1000-8000-00805f9b34fb";
+
     /*
     * widgets
      */
@@ -100,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         int i;
                         for (i = 0; i < filters.size(); i++) {
                             String filter = filters.get(i);
-                            if (device_name.contains(filter))
+                            if (device_name.toUpperCase().contains(filter.toUpperCase()))
                                 break;
                         }
                         if(i >= filters.size())
@@ -147,6 +151,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         for(BluetoothGattCharacteristic c:cs)
                             Log.d("characteristic", ""+c.getUuid());
                     }
+                    Intent intent = new Intent(getApplicationContext(), DeviceActivity.class);
+                    startActivity(intent);
                     break;
                 default:break;
             }
@@ -188,5 +194,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             boolean rel = myBle.bleConnect(device);
             //Toast.makeText(this, "connect to "+device.getName()+"  "+device.getAddress()+" "+rel, Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        myBle.bleDisconnect();
+        myBle.close();
     }
 }

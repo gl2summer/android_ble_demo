@@ -7,66 +7,95 @@
     tools:context="com.bsa.jhc.android_ble_demo.MainActivity"
     tools:layout_editor_absoluteY="81dp">
 
-    <Button
-        android:id="@+id/btn_scan"
+    <ListView
+        android:id="@+id/ble_list"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginStart="32dp"
-        android:text="@string/SCAN"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        android:layout_height="0dp"
+        android:fadingEdge="vertical"
+        android:fadingEdgeLength="0dp"
+        android:scrollbars="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintBottom_toTopOf="@+id/filter1"
+        app:layout_constraintVertical_chainStyle="spread_inside" />
 
     <EditText
         android:id="@+id/filter1"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="86dp"
+        android:layout_height="33dp"
         android:ems="10"
         android:focusable="auto"
         android:inputType="textPersonName"
         android:text=""
-        app:layout_constraintBottom_toTopOf="@+id/btn_scan"
-        app:layout_constraintEnd_toStartOf="@+id/filter2"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="@+id/btn_scan"
-        app:layout_constraintTop_toBottomOf="@+id/ble_list" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/filter2" />
 
     <EditText
         android:id="@+id/filter2"
-        android:layout_width="0dp"
-        android:layout_height="43dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="86dp"
+        android:layout_height="35dp"
         android:ems="10"
         android:focusable="auto"
         android:focusedByDefault="false"
         android:inputType="textPersonName"
         android:text=""
-        app:layout_constraintBottom_toTopOf="@+id/btn_scan"
-        app:layout_constraintEnd_toEndOf="@+id/btn_scan"
-        app:layout_constraintStart_toEndOf="@+id/filter1"
-        app:layout_constraintTop_toBottomOf="@+id/ble_list" />
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/btn_scan" />
 
-    <ListView
-        android:id="@+id/ble_list"
+    <Button
+        android:id="@+id/btn_scan"
+        android:layout_width="91dp"
+        android:layout_height="62dp"
+        android:text="@string/SCAN"
+        app:layout_constraintBottom_toTopOf="@+id/tv_ota_file"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="167dp"
+        android:layout_height="101dp"
+        android:text="log\n"
+        app:layout_constraintBottom_toTopOf="@+id/tv_ota_file"
+        app:layout_constraintLeft_toRightOf="@+id/btn_scan"
+        app:layout_constraintRight_toLeftOf="@+id/btn_browse" />
+
+    <Button
+        android:id="@+id/btn_getInfo"
+        android:layout_width="86dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="4dp"
+        android:text="GetInfo"
+        app:layout_constraintBottom_toTopOf="@+id/btn_OTA"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <Button
+        android:id="@+id/btn_OTA"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="OTA"
+        app:layout_constraintBottom_toTopOf="@+id/btn_browse"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintVertical_bias="0.148" />
+
+    <Button
+        android:id="@+id/btn_browse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Browse"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_ota_file"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="0dp"
-        android:fadingEdge="vertical"
-        android:fadingEdgeLength="0dp"
-        android:scrollbars="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/filter1"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_height="36dp"
+        android:shadowColor="@android:color/darker_gray"
+        android:text="OTA file"
+        android:textAlignment="textStart"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintRight_toLeftOf="@+id/btn_browse" />
 
 </android.support.constraint.ConstraintLayout>

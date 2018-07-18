@@ -49,18 +49,21 @@ public class MyBle{
     public MyBle(Context context, Handler handler) {
         this.context = context;
         this.handler = handler;
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        filter.addAction(BluetoothDevice.ACTION_FOUND);
-        //filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-        //filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
-        //filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
-        context.registerReceiver(receiver, filter);
 
         final BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         adapter = manager.getAdapter();
         //adapter = BluetoothAdapter.getDefaultAdapter();
+
+        if(!adapter.isEnabled())
+            adapter.enable();
+        /*
+        Intent turn_on = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(turn_on, 0);
+        //Toast.makeText(MainActivity.this, "蓝牙已经开启", Toast.LENGTH_SHORT).show();
+         */
+        /*if(!adapter.isEnabled())
+            return true;
+        return adapter.disable();*/
     }
 
     private void notifyOwner(int what, Object obj){
@@ -145,20 +148,24 @@ public class MyBle{
     };
 
     public boolean open() {
-        if(adapter.isEnabled())
-            return true;
-        return adapter.enable();
 
-        /*
-        Intent turn_on = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(turn_on, 0);
-        //Toast.makeText(MainActivity.this, "蓝牙已经开启", Toast.LENGTH_SHORT).show();
-         */
+        if(!adapter.isEnabled())
+            return false;
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        //filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        //filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        //filter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
+        context.registerReceiver(receiver, filter);
+
+        return true;
     }
     public boolean close(){
-        if(!adapter.isEnabled())
-            return true;
-        return adapter.disable();
+        context.unregisterReceiver(receiver);
+        return true;
     }
 
     public boolean isOpened(){
