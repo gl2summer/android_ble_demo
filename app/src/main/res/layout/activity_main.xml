@@ -22,74 +22,72 @@
 
     <EditText
         android:id="@+id/filter1"
-        android:layout_width="86dp"
-        android:layout_height="33dp"
+        android:layout_width="79dp"
+        android:layout_height="44dp"
         android:ems="10"
         android:focusable="auto"
         android:inputType="textPersonName"
         android:text=""
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/filter2" />
+        app:layout_constraintBottom_toTopOf="@+id/filter2"
+        app:layout_constraintLeft_toLeftOf="parent" />
 
     <EditText
         android:id="@+id/filter2"
-        android:layout_width="86dp"
-        android:layout_height="35dp"
+        android:layout_width="79dp"
+        android:layout_height="44dp"
         android:ems="10"
         android:focusable="auto"
         android:focusedByDefault="false"
         android:inputType="textPersonName"
         android:text=""
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/btn_scan" />
+        app:layout_constraintBottom_toTopOf="@+id/btn_scan"
+        app:layout_constraintLeft_toLeftOf="parent" />
 
     <Button
         android:id="@+id/btn_scan"
-        android:layout_width="91dp"
-        android:layout_height="62dp"
+        android:layout_width="79dp"
+        android:layout_height="56dp"
         android:text="@string/SCAN"
         app:layout_constraintBottom_toTopOf="@+id/tv_ota_file"
         app:layout_constraintLeft_toLeftOf="parent" />
 
     <TextView
-        android:id="@+id/textView"
-        android:layout_width="167dp"
-        android:layout_height="101dp"
-        android:text="log\n"
+        android:id="@+id/tv_log"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/tv_ota_file"
         app:layout_constraintLeft_toRightOf="@+id/btn_scan"
-        app:layout_constraintRight_toLeftOf="@+id/btn_browse" />
+        app:layout_constraintRight_toLeftOf="@+id/btn_browse"
+        app:layout_constraintTop_toTopOf="@+id/filter1" />
 
     <Button
         android:id="@+id/btn_getInfo"
-        android:layout_width="86dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="4dp"
-        android:text="GetInfo"
+        android:layout_width="67dp"
+        android:layout_height="49dp"
+        android:text="Info"
         app:layout_constraintBottom_toTopOf="@+id/btn_OTA"
         app:layout_constraintRight_toRightOf="parent" />
 
     <Button
         android:id="@+id/btn_OTA"
-        android:layout_width="wrap_content"
+        android:layout_width="67dp"
         android:layout_height="wrap_content"
         android:text="OTA"
         app:layout_constraintBottom_toTopOf="@+id/btn_browse"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintVertical_bias="0.148" />
+        app:layout_constraintRight_toRightOf="parent" />
 
     <Button
         android:id="@+id/btn_browse"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Browse"
+        android:layout_width="68dp"
+        android:layout_height="47dp"
+        android:text="Open"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
     <TextView
         android:id="@+id/tv_ota_file"
         android:layout_width="0dp"
-        android:layout_height="36dp"
+        android:layout_height="35dp"
         android:shadowColor="@android:color/darker_gray"
         android:text="OTA file"
         android:textAlignment="textStart"

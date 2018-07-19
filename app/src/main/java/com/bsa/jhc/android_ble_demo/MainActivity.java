@@ -31,16 +31,18 @@ import android.widget.Toast;
 
 import com.ble.MyBle;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
-    public static String serviceUuid = "0000ff00-0000-1000-8000-00805f9b34fb";
-    public static String characterUuid = "0000ff01-0000-1000-8000-00805f9b34fb";
-    public static String characterUuidNotice = "0000ff02-0000-1000-8000-00805f9b34fb";
+    private static final String serviceUuidString = "2ea78970-7d44-44bb-b097-26183f402400";
+    private static final String characterUuidString = "2ea78970-7d44-44bb-b097-26183f402408";
 
     /*
     * widgets
@@ -48,9 +50,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button btn_scan;
     private ListView lv_ble_list;
     private EditText et_filter1, et_filter2;
+    private TextView tv_log;
 
     private List<Object> ble_devices_list = null;
     private BleAdapter lv_adapter = null;
+
+    private MyApp myApp = null;
 
     MyBle myBle = null;
 
@@ -60,6 +65,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
+
+        tv_log = (TextView) findViewById(R.id.tv_log);
 
         et_filter1 = (EditText) findViewById(R.id.filter1);
         et_filter2 = (EditText) findViewById(R.id.filter2);
@@ -74,8 +82,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lv_ble_list.setMinimumHeight(128);
         lv_ble_list.setOnItemClickListener(this);
 
-        myBle = new MyBle(this, handler);
-        myBle.open();
+        if (Build.VERSION.SDK_INT >= 6.0) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 12);
+        }
+
+        myApp = (MyApp) getApplication();
+        myBle = myApp.getMyBle();
+        myBle.open(handler);
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+
+        switch (requestCode) {
+            case 12: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // 运行时权限已授权
+                }
+                break;
+            }
+        }
+    }
+
+    private void logAppend(String message){
+        if(tv_log!=null) {
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss - ");// HH:mm:ss
+            Date date = new Date(System.currentTimeMillis());//获取当前时间
+
+            tv_log.append(simpleDateFormat.format(date) + message+"\r\n");
+            //auto scroll to bottom
+            int scrollAmount = tv_log.getLayout().getLineTop(tv_log.getLineCount()) - tv_log.getHeight();
+            if (scrollAmount > 0)
+                tv_log.scrollTo(0, scrollAmount);
+            else
+                tv_log.scrollTo(0, 0);
+        }
     }
 
     @SuppressLint("HandlerLeak")
@@ -84,6 +124,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void handleMessage(Message msg) {
 
             BluetoothDevice device;
+            BluetoothGatt gatt;
+            BluetoothGattCharacteristic characteristic;
             Log.d("handler", ""+msg.what);
 
             switch (msg.what){
@@ -124,6 +166,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                     break;
                 case MyBle.BLE_SCAN_STARTED:
+                    logAppend("scan start...");
                     ble_devices_list.clear();
                     lv_adapter.notifyDataSetChanged();
                     btn_scan.setText(R.string.STOP_SCAN);
@@ -131,58 +174,74 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     break;
                 case MyBle.BLE_SCAN_STOPPED:
                 case MyBle.BLE_SCAN_COMPLETED:
+                    logAppend("scan complete...");
                     btn_scan.setText(R.string.SCAN);
                     btn_scan.setTextColor(getResources().getColor(android.R.color.black));
                     break;
                 case MyBle.BLE_DEVICE_CONNECTED:
                     device = ((BluetoothGatt) msg.obj).getDevice();
-                    Toast.makeText(getApplicationContext(), "connected to"+device.getName(), Toast.LENGTH_SHORT).show();
+                    logAppend("connected to "+device.getName());
+                    //Toast.makeText(getApplicationContext(), "connected to"+device.getName(), Toast.LENGTH_SHORT).show();
+                    break;
+                case MyBle.BLE_DEVICE_CONNECTING:
+                    device = ((BluetoothGatt) msg.obj).getDevice();
+                    logAppend("connecting to "+device.getName());
                     break;
                 case MyBle.BLE_DEVICE_DISCONNECTED:
                     device = ((BluetoothGatt) msg.obj).getDevice();
-                    Toast.makeText(getApplicationContext(), "disconnected from"+device.getName(), Toast.LENGTH_SHORT).show();
+                    logAppend("disconnected from "+device.getName());
                     break;
                 case MyBle.BLE_SERVICES_FOUND:
-                    BluetoothGatt gatt = (BluetoothGatt) msg.obj;
+                    gatt = (BluetoothGatt) msg.obj;
                     List<BluetoothGattService> l = gatt.getServices();
                     for(BluetoothGattService s:l){
-                        Log.d("service",""+s.getUuid());
-                        List<BluetoothGattCharacteristic> cs = s.getCharacteristics();
-                        for(BluetoothGattCharacteristic c:cs)
-                            Log.d("characteristic", ""+c.getUuid());
+                        //Log.d("","service found "+s.getUuid());
+                        if(s.getUuid().equals(UUID.fromString(serviceUuidString))) {
+                            Log.d("","target service found: "+s.getUuid());
+
+                            List<BluetoothGattCharacteristic> cs = s.getCharacteristics();
+                            for (BluetoothGattCharacteristic c : cs) {
+                                if(c.getUuid().equals(UUID.fromString(characterUuidString))) {
+                                    Log.d("", "target characteristic found: " + c.getUuid());
+
+                                    logAppend("target found!");
+
+                                    gatt.readCharacteristic(c);
+                                }
+                            }
+                        }
                     }
-                    Intent intent = new Intent(getApplicationContext(), DeviceActivity.class);
-                    startActivity(intent);
+                    //Intent intent = new Intent(getApplicationContext(), DeviceActivity.class);
+                    //startActivity(intent);
+                    break;
+                case MyBle.BLE_CHARACTERISTIC_WRITE:
+                    characteristic = (BluetoothGattCharacteristic)msg.obj;
+                    Log.d("", "onCharacteristicWrite: "+ new String(characteristic.getValue()));
+                    break;
+                case MyBle.BLE_CHARACTERISTIC_READ:
+                    characteristic = (BluetoothGattCharacteristic)msg.obj;
+                    logAppend("char read:"+ new String(characteristic.getValue()));
+                    Log.d("", "onCharacteristicRead: "+ new String(characteristic.getValue()));
+                    break;
+                case MyBle.BLE_CHARACTERISTIC_CHANGED:
+                    characteristic = (BluetoothGattCharacteristic)msg.obj;
+                    Log.d("", "onCharacteristicChanged: "+ new String(characteristic.getValue()));
                     break;
                 default:break;
             }
         }
     };
 
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-
-        switch (requestCode) {
-            case 12: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // 运行时权限已授权
-                }
-                break;
-            }
-        }
-    }
-
     @Override
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.btn_scan:
-
-                if (Build.VERSION.SDK_INT >= 6.0) {
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 12);
-                }
-                if(myBle.isScanning())
+                if(myBle.isScanning()) {
                     myBle.scanStop();
-                else
+                }
+                else{
                     myBle.scanStart();
+                }
                 break;
         }
     }
@@ -201,6 +260,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         myBle.bleDisconnect();
-        myBle.close();
+        myBle.close(handler);
     }
 }

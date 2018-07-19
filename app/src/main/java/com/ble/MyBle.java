@@ -35,8 +35,9 @@ public class MyBle{
     public static final int BLE_SERVICES_FOUND = 7;
     public static final int BLE_DEVICE_CONNECTING = 8;
     public static final int BLE_DEVICE_DISCONNECTED = 9;
-    public static final int BLE_DATA_SENDED = 10;
-    public static final int BLE_DATA_READED = 11;
+    public static final int BLE_CHARACTERISTIC_WRITE = 10;
+    public static final int BLE_CHARACTERISTIC_READ = 11;
+    public static final int BLE_CHARACTERISTIC_CHANGED = 12;
 
 
     private Context context = null;
@@ -46,9 +47,8 @@ public class MyBle{
     private BluetoothGatt mBluetoothGatt = null;
 
 
-    public MyBle(Context context, Handler handler) {
+    public MyBle(Context context) {
         this.context = context;
-        this.handler = handler;
 
         final BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         adapter = manager.getAdapter();
@@ -102,6 +102,9 @@ public class MyBle{
                     notifyOwner(BLE_DEVICE_CONNECTED, gatt);
                     gatt.discoverServices();
                 }
+                else if(newState == BluetoothProfile.STATE_CONNECTING){
+                    notifyOwner(BLE_DEVICE_CONNECTING, gatt);
+                }
                 else {
                     notifyOwner(BLE_DEVICE_DISCONNECTED, gatt);
                 }
@@ -131,26 +134,31 @@ public class MyBle{
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicRead(gatt, characteristic, status);
-            notifyOwner(102,null);
+            notifyOwner(BLE_CHARACTERISTIC_READ, characteristic);
         }
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             super.onCharacteristicWrite(gatt, characteristic, status);
-            notifyOwner(103,null);
+            notifyOwner(BLE_CHARACTERISTIC_WRITE, characteristic);
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            notifyOwner(104,null);
+            notifyOwner(BLE_CHARACTERISTIC_CHANGED, characteristic);
         }
     };
 
-    public boolean open() {
+    public boolean open(Handler handler) {
 
         if(!adapter.isEnabled())
             return false;
+
+        if(this.handler != null)
+            return false;
+
+        this.handler = handler;
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
@@ -163,7 +171,12 @@ public class MyBle{
 
         return true;
     }
-    public boolean close(){
+    public boolean close(Handler handler){
+        if(this.handler != handler)
+            return false;
+
+        this.handler = null;
+
         context.unregisterReceiver(receiver);
         return true;
     }
@@ -171,7 +184,6 @@ public class MyBle{
     public boolean isOpened(){
         return adapter.isEnabled();
     }
-
 
     public boolean scanStart(){
         if(adapter.isDiscovering())
@@ -190,6 +202,9 @@ public class MyBle{
         return adapter.isDiscovering();
     }
 
+    public BluetoothGatt getBluetoothGatt(){
+        return mBluetoothGatt;
+    }
     public boolean bleConnect(BluetoothDevice device){
         adapter.cancelDiscovery();
         bleDisconnect();
