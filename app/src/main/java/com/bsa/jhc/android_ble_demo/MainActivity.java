@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 if(c.getUuid().equals(UUID.fromString(characterUuidString))) {
                                     Log.d("", "target characteristic found: " + c.getUuid());
 
-                                    logAppend("target found!");
+                                    logAppend("target device found!");
 
                                     gatt.readCharacteristic(c);
                                 }

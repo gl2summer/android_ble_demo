@@ -97,7 +97,7 @@ public class MyBle{
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            //if (status == BluetoothGatt.GATT_SUCCESS) {
                 if(newState == BluetoothProfile.STATE_CONNECTED) {
                     notifyOwner(BLE_DEVICE_CONNECTED, gatt);
                     gatt.discoverServices();
@@ -105,10 +105,14 @@ public class MyBle{
                 else if(newState == BluetoothProfile.STATE_CONNECTING){
                     notifyOwner(BLE_DEVICE_CONNECTING, gatt);
                 }
-                else {
+                else if(newState == BluetoothProfile.STATE_DISCONNECTED){
+                    if(status != BluetoothGatt.GATT_FAILURE){
+                        gatt.close();
+                    }
                     notifyOwner(BLE_DEVICE_DISCONNECTED, gatt);
                 }
-            }
+                else{}
+            //}
         }
 
         @Override

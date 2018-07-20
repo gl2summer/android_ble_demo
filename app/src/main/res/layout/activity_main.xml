@@ -22,7 +22,7 @@
 
     <EditText
         android:id="@+id/filter1"
-        android:layout_width="79dp"
+        android:layout_width="64dp"
         android:layout_height="44dp"
         android:ems="10"
         android:focusable="auto"
@@ -33,7 +33,7 @@
 
     <EditText
         android:id="@+id/filter2"
-        android:layout_width="79dp"
+        android:layout_width="64dp"
         android:layout_height="44dp"
         android:ems="10"
         android:focusable="auto"
@@ -45,7 +45,7 @@
 
     <Button
         android:id="@+id/btn_scan"
-        android:layout_width="79dp"
+        android:layout_width="64dp"
         android:layout_height="56dp"
         android:text="@string/SCAN"
         app:layout_constraintBottom_toTopOf="@+id/tv_ota_file"
@@ -62,7 +62,7 @@
 
     <Button
         android:id="@+id/btn_getInfo"
-        android:layout_width="67dp"
+        android:layout_width="62dp"
         android:layout_height="49dp"
         android:text="Info"
         app:layout_constraintBottom_toTopOf="@+id/btn_OTA"
@@ -70,7 +70,7 @@
 
     <Button
         android:id="@+id/btn_OTA"
-        android:layout_width="67dp"
+        android:layout_width="63dp"
         android:layout_height="wrap_content"
         android:text="OTA"
         app:layout_constraintBottom_toTopOf="@+id/btn_browse"
@@ -78,7 +78,7 @@
 
     <Button
         android:id="@+id/btn_browse"
-        android:layout_width="68dp"
+        android:layout_width="62dp"
         android:layout_height="47dp"
         android:text="Open"
         app:layout_constraintBottom_toBottomOf="parent"
