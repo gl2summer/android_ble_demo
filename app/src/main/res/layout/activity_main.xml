@@ -46,9 +46,17 @@
     <Button
         android:id="@+id/btn_scan"
         android:layout_width="64dp"
-        android:layout_height="56dp"
+        android:layout_height="50dp"
         android:text="@string/SCAN"
-        app:layout_constraintBottom_toTopOf="@+id/tv_ota_file"
+        app:layout_constraintBottom_toTopOf="@+id/btn_connect"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
+    <Button
+        android:id="@+id/btn_connect"
+        android:layout_width="64dp"
+        android:layout_height="50dp"
+        android:text="CONN"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent" />
 
     <TextView
@@ -93,7 +101,7 @@
         android:textAlignment="textStart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/btn_connect"
         app:layout_constraintRight_toLeftOf="@+id/btn_browse" />
 
 </android.support.constraint.ConstraintLayout>

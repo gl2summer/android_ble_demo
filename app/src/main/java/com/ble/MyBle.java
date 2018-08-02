@@ -22,8 +22,24 @@ import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
+
+class BleDevice {
+    public BluetoothGatt mBleGatt;
+    public BluetoothDevice mBleDevice;
+
+    public BleDevice() {
+        this.mBleGatt = null;
+        this.mBleDevice = null;
+    }
+};
 
 public class MyBle{
+
+    private static final String TAG = "MyBle";
+
 
     public static final int BLE_ENABLED = 0;
     public static final int BLE_DISABLED = 1;
@@ -40,38 +56,34 @@ public class MyBle{
     public static final int BLE_CHARACTERISTIC_CHANGED = 12;
 
 
-    private Context context = null;
-    private Handler handler = null;
+    private Context context;
+    private BleCallback callback;
 
-    private BluetoothAdapter adapter = null;
-    private BluetoothGatt mBluetoothGatt = null;
+    private BluetoothAdapter adapter;
+
+    private BleDevice mBleDevice;
 
 
-    public MyBle(Context context) {
+    public MyBle(Context context, BleCallback callback) {
         this.context = context;
+        this.callback = callback;
 
         final BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         adapter = manager.getAdapter();
         //adapter = BluetoothAdapter.getDefaultAdapter();
 
-        if(!adapter.isEnabled())
+        if(!adapter.isEnabled()) {
             adapter.enable();
-        /*
-        Intent turn_on = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(turn_on, 0);
-        //Toast.makeText(MainActivity.this, "蓝牙已经开启", Toast.LENGTH_SHORT).show();
-         */
-        /*if(!adapter.isEnabled())
-            return true;
-        return adapter.disable();*/
+
+            /* Intent turn_on = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            context.startActivity(turn_on); */
+        }
+        mBleDevice = new BleDevice();
     }
 
-    private void notifyOwner(int what, Object obj){
-        if((adapter != null) && (handler != null)){
-            Message message = new Message();
-            message.what = what;
-            message.obj = obj;
-            handler.sendMessage(message);
+    private void notifyOwner(int what, Object... obj){
+        if(callback != null){
+            callback.notify(what, obj);
         }
     }
 
@@ -79,90 +91,26 @@ public class MyBle{
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            //Log.d(TAG, "RecvBroadcast: "+action);
 
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (device.getBondState() != BluetoothDevice.BOND_BONDED) {}
                 notifyOwner(BLE_DEVICE_FOUND, device);
+
             } else if(BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
-                notifyOwner(BLE_SCAN_STARTED, null);
+                notifyOwner(BLE_SCAN_STARTED);
+
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                notifyOwner(BLE_SCAN_COMPLETED, null);
+                notifyOwner(BLE_SCAN_COMPLETED);
             }
         }
     };
 
-
-    private BluetoothGattCallback mGattCallback =  new BluetoothGattCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            super.onConnectionStateChange(gatt, status, newState);
-            //if (status == BluetoothGatt.GATT_SUCCESS) {
-                if(newState == BluetoothProfile.STATE_CONNECTED) {
-                    notifyOwner(BLE_DEVICE_CONNECTED, gatt);
-                    gatt.discoverServices();
-                }
-                else if(newState == BluetoothProfile.STATE_CONNECTING){
-                    notifyOwner(BLE_DEVICE_CONNECTING, gatt);
-                }
-                else if(newState == BluetoothProfile.STATE_DISCONNECTED){
-                    if(status != BluetoothGatt.GATT_FAILURE){
-                        gatt.close();
-                    }
-                    notifyOwner(BLE_DEVICE_DISCONNECTED, gatt);
-                }
-                else{}
-            //}
-        }
-
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            super.onServicesDiscovered(gatt, status);
-            notifyOwner(101,null);
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                //gatt.getServices();
-                /*BluetoothGattService service = gatt.getService(UUID.fromString(serviceUuid));
-                mCharacteristic = service.getCharacteristic(UUID.fromString(characterUuid));
-                mCharacteristicNotice = service.getCharacteristic(UUID.fromString(characterUuidNotice));
-
-                //开启通知
-                mBluetoothGatt.setCharacteristicNotification(mCharacteristicNotice, true);
-                BluetoothGattDescriptor descriptor = mCharacteristic.getDescriptor(UUID.fromString(clientUuid));
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                mBluetoothGatt.writeDescriptor(descriptor);*/
-
-                notifyOwner(BLE_SERVICES_FOUND, gatt);
-            }
-        }
-
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            super.onCharacteristicRead(gatt, characteristic, status);
-            notifyOwner(BLE_CHARACTERISTIC_READ, characteristic);
-        }
-
-        @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            super.onCharacteristicWrite(gatt, characteristic, status);
-            notifyOwner(BLE_CHARACTERISTIC_WRITE, characteristic);
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            super.onCharacteristicChanged(gatt, characteristic);
-            notifyOwner(BLE_CHARACTERISTIC_CHANGED, characteristic);
-        }
-    };
-
-    public boolean open(Handler handler) {
+    public boolean open() {
 
         if(!adapter.isEnabled())
             return false;
-
-        if(this.handler != null)
-            return false;
-
-        this.handler = handler;
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
@@ -175,12 +123,7 @@ public class MyBle{
 
         return true;
     }
-    public boolean close(Handler handler){
-        if(this.handler != handler)
-            return false;
-
-        this.handler = null;
-
+    public boolean close(){
         context.unregisterReceiver(receiver);
         return true;
     }
@@ -206,28 +149,113 @@ public class MyBle{
         return adapter.isDiscovering();
     }
 
-    public BluetoothGatt getBluetoothGatt(){
-        return mBluetoothGatt;
+
+    private boolean isCurrentBleGatt(BluetoothGatt gatt){
+            return gatt.equals(mBleDevice.mBleGatt);
     }
+
+    public BluetoothGatt getCurrentBleGatt(){
+        return mBleDevice.mBleGatt;
+    }
+
+    public BluetoothDevice getCurrentBleDevice(){
+        return mBleDevice.mBleDevice;
+    }
+
+    private BluetoothGattCallback mGattCallback =  new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            //Log.d(TAG, "onConnectionStateChange: "+newState);
+            super.onConnectionStateChange(gatt, status, newState);
+            //if (status == BluetoothGatt.GATT_SUCCESS) {
+            if(newState == BluetoothProfile.STATE_CONNECTED) {
+                if(isCurrentBleGatt(gatt)) {
+                    gatt.discoverServices();
+                    notifyOwner(BLE_DEVICE_CONNECTED, gatt);
+                }
+            }
+            else if(newState == BluetoothProfile.STATE_CONNECTING){
+                if(isCurrentBleGatt(gatt)) {
+                    notifyOwner(BLE_DEVICE_CONNECTING, gatt);
+                }
+            }
+            else if(newState == BluetoothProfile.STATE_DISCONNECTED){
+                if(isCurrentBleGatt(gatt)) {
+                    notifyOwner(BLE_DEVICE_DISCONNECTED, gatt);
+                    if (status != BluetoothGatt.GATT_FAILURE) {
+                        //gatt.close();
+                    }
+                    mBleDevice.mBleGatt.close();
+                    mBleDevice.mBleGatt = null;
+                }
+            }
+            else{}
+            //}
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            super.onServicesDiscovered(gatt, status);
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                if(isCurrentBleGatt(gatt)) {
+                    notifyOwner(BLE_SERVICES_FOUND, gatt);
+                }
+            }
+        }
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicRead(gatt, characteristic, status);
+            if(isCurrentBleGatt(gatt)) {
+                notifyOwner(BLE_CHARACTERISTIC_READ, gatt, characteristic);
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            if(isCurrentBleGatt(gatt)) {
+                notifyOwner(BLE_CHARACTERISTIC_WRITE, gatt, characteristic);
+            }
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            super.onCharacteristicChanged(gatt, characteristic);
+            if(isCurrentBleGatt(gatt)) {
+                notifyOwner(BLE_CHARACTERISTIC_CHANGED, gatt, characteristic);
+            }
+        }
+    };
+
+
     public boolean bleConnect(BluetoothDevice device){
+        if(device == null)
+            return false;
+
         adapter.cancelDiscovery();
-        bleDisconnect();
-        mBluetoothGatt = device.connectGatt(context, false, mGattCallback);
-        //if(mBluetoothGatt != null)
-        //    mBluetoothGatt.connect();
-        return (mBluetoothGatt!=null);
+
+        if(mBleDevice.mBleGatt != null) {
+            mBleDevice.mBleGatt.disconnect();
+            mBleDevice.mBleGatt.close();
+        }
+        mBleDevice.mBleDevice = device;
+        mBleDevice.mBleGatt = mBleDevice.mBleDevice.connectGatt(context, true, mGattCallback);
+        if(mBleDevice.mBleGatt != null) {
+            notifyOwner(BLE_DEVICE_CONNECTING, mBleDevice.mBleGatt);
+            //mBleDevice.mBleGatt.connect();
+        }
+        return (mBleDevice.mBleGatt != null);
     }
     public boolean bleDisconnect(){
-        if(isBleConnected()) {
-            mBluetoothGatt.disconnect();
-            mBluetoothGatt.close();
-            mBluetoothGatt = null;
+        if(mBleDevice.mBleGatt != null) {
+            mBleDevice.mBleGatt.disconnect();
         }
         return true;
     }
     public boolean isBleConnected(){
-        if(mBluetoothGatt == null)
+        if(mBleDevice.mBleGatt == null)
             return false;
-        return mBluetoothGatt.connect();
+        return mBleDevice.mBleGatt.connect();
     }
 }

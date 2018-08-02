@@ -1,16 +1,20 @@
 package com.bsa.jhc.android_ble_demo;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Message;
 
+import com.ble.BleCallback;
 import com.ble.MyBle;
 
 /**
  * Created by jhc on 2018/7/16.
  */
 
-public class MyApp extends Application {
+public class MyApp extends Application implements BleCallback{
 
-    MyBle myBle = null;
+    private MyBle myBle;
+    private Handler handler;
 
     @Override
     public void onCreate() {
@@ -18,8 +22,23 @@ public class MyApp extends Application {
     }
 
     public synchronized MyBle getMyBle() {
-        if(myBle == null)
-            myBle = new MyBle(this);
+        if(myBle == null) {
+            myBle = new MyBle(this, this);
+        }
         return myBle;
+    }
+
+    public void setBleHandler(Handler handler){
+        this.handler = handler;
+    }
+
+    @Override
+    public void notify(int message, Object... obj) {
+        if(handler != null){
+            Message msg = new Message();
+            msg.what = message;
+            msg.obj = obj;
+            handler.sendMessage(msg);
+        }
     }
 }

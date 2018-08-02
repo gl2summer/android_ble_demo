@@ -7,10 +7,11 @@ package com.ble;
 public class Prot {
     static final byte PKT_BEGIN = (byte) 0x6f;
     static final byte PKT_END = (byte) 0x8f;
-    static final byte PKT_DATA_SET = (byte) 0x71;
-    static final byte PKT_DATA_SET_RSP = (byte) 0x81;
-    static final byte PKT_DATA_GET = (byte) 0x70;
-    static final byte PKT_DATA_GET_RSP = (byte) 0x71;
+
+    public static final byte PKT_DATA_SET = (byte) 0x71;
+    public static final byte PKT_DATA_SET_RSP = (byte) 0x81;
+    public static final byte PKT_DATA_GET = (byte) 0x70;
+    public static final byte PKT_DATA_GET_RSP = (byte) 0x71;
 
     static final int PKT_MIN_LENGHT = 6;
 
@@ -36,7 +37,7 @@ public class Prot {
         if(parseLen < PKT_MIN_LENGHT)
             return PKT_LENGHT_NOENOUGH;
 
-        int datLen = pktBuff[parseOffset+3] << 8 | pktBuff[parseOffset+4];
+        int datLen = pktBuff[parseOffset+4] << 8 | pktBuff[parseOffset+3];
         if(!((parseLen >= PKT_MIN_LENGHT+datLen) && (pktBuff[parseOffset+datLen+PKT_MIN_LENGHT-1] == PKT_END))){
             return tryUnpack(pktBuff,parseOffset+1, result);
         }
@@ -57,8 +58,8 @@ public class Prot {
         pktBuff[0] = PKT_BEGIN;
         pktBuff[1] = cmd;
         pktBuff[2] = dir;
-        pktBuff[3] = (byte) ((datLen>>8)&0xff);
-        pktBuff[4] = (byte) (datLen&0xff);
+        pktBuff[3] = (byte) (datLen&0xff);
+        pktBuff[4] = (byte) ((datLen>>8)&0xff);
         int i = 0;
         for(; i<datLen; i++){
             pktBuff[5+i] = dat[0];
