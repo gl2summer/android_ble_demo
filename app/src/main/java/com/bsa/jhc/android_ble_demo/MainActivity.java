@@ -24,9 +24,11 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.ble.devcie.MyBleDevice;
 import com.MyUtil;
-import com.ble.MyBle;
-import com.ble.Prot;
+import com.ble.myBle.MyBle;
+import com.ble.devcie.Prot;
+import com.ble.devcie.BleDeviceCallBack;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,7 +36,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener, BleDeviceCallBack {
 
     /*private static final String serviceUuidString = "2ea78970-7d44-44bb-b097-26183f402400";
     private static final String characterUuidString = "2ea78970-7d44-44bb-b097-26183f402408";*/
@@ -64,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private ProgressDialog pdlg_ota = null;
     private boolean dfu_ongoing = false;
+
+    private MyBleDevice myBleDevice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,11 +101,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 12);
         }
 
+        myBleDevice = new MyBleDevice();
+        myBleDevice.setCallBack(this);
+
         myApp = (MyApp) getApplication();
         myApp.setBleHandler(handler);
         myBle = myApp.getMyBle();
         myBle.open();
     }
+
 
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
 
@@ -128,84 +136,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             else
                 tv_log.scrollTo(0, 0);
         }
-    }
-
-    private boolean checkIfBleDeviceGf(BluetoothGatt gatt) {
-
-        boolean foundtxchar = false;
-        boolean foundrxchar = false;
-        List<BluetoothGattService> services = gatt.getServices();
-        for (BluetoothGattService s : services) {
-            if (s.getUuid().equals(serviceUuid)) {
-                Log.d(TAG, "target service found: " + s.getUuid());
-
-                List<BluetoothGattCharacteristic> cs = s.getCharacteristics();
-                for (BluetoothGattCharacteristic mChar : cs) {
-                    if (mChar.getUuid().equals(tx_characterUuid)) {
-                        logAppend("tx-char found!");
-                        foundtxchar = true;
-                    } else if (mChar.getUuid().equals(rx_characterUuid)) {
-                        logAppend("rx-char found!");
-                        foundrxchar = true;
-
-                        //enable notification
-                        gatt.setCharacteristicNotification(mChar, true);
-                        BluetoothGattDescriptor descriptor = mChar.getDescriptor(rx_DescriptorUuid);
-                        if(descriptor != null) {
-                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                            boolean r = gatt.writeDescriptor(descriptor);
-                            logAppend("enable notification: "+r);
-                        }
-                    }
-                    if(foundrxchar && foundtxchar) {
-                        logAppend("target device found!");
-                        break;
-                    }
-                }
-            }
-        }
-        return (foundrxchar && foundtxchar);
-    }
-
-    private boolean sendToBleDeviceGf(BluetoothGatt gatt, byte[] data){
-        if((gatt != null) && (data != null) && (data.length > 0)) {
-            BluetoothGattService service = gatt.getService(serviceUuid);
-            if(service != null) {
-                BluetoothGattCharacteristic txChar = service.getCharacteristic(tx_characterUuid);
-                BluetoothGattCharacteristic rxChar = service.getCharacteristic(rx_characterUuid);
-                if ((txChar != null) && (rxChar != null)) {
-                    txChar.setValue(data);
-                    int tryTimes = 50;
-                    while(--tryTimes > 0) {
-                        if(gatt.writeCharacteristic(txChar))
-                            break;
-                        try{
-                            Thread.sleep(10);
-                        }catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    Log.d(TAG, "sendToBleDeviceGf: "+ tryTimes);
-
-                    byte[] confirmByte =  new byte[]{0x03};
-                    rxChar.setValue(confirmByte);
-                    tryTimes = 50;
-                    while(--tryTimes > 0) {
-                        if(gatt.writeCharacteristic(rxChar))
-                            break;
-
-                        try{
-                            Thread.sleep(10);
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                    }
-                    Log.d(TAG, "sendToBleDeviceGf: "+ tryTimes);
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     @SuppressLint("HandlerLeak")
@@ -306,7 +236,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     case MyBle.BLE_SERVICES_FOUND:
                         objs = (Object[]) msg.obj;
                         gatt = (BluetoothGatt) objs[0];
-                        checkIfBleDeviceGf(gatt);
+                        if(myBleDevice != null) {
+                            myBleDevice.matchAndSetMyBleDevice(gatt);
+                        }
                         break;
                     case MyBle.BLE_CHARACTERISTIC_WRITE:
                         objs = (Object[]) msg.obj;
@@ -325,7 +257,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         objs = (Object[]) msg.obj;
                         gatt = (BluetoothGatt) objs[0];
                         characteristic = (BluetoothGattCharacteristic) objs[1];
-                        Log.d(TAG, "onCharacteristicChanged(" + characteristic.getValue().length +"): " + MyUtil.toHexString(characteristic.getValue()));
+                        if(myBleDevice != null) {
+                            myBleDevice.recvFromMyBleDevice(gatt, characteristic);
+                        }
                         break;
                     default:
                         break;
@@ -348,8 +282,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_OTA:
                 if(myBle.isBleConnected()){
                     BluetoothGatt gatt = myBle.getCurrentBleGatt();
-                    byte[] values = Prot.pack((byte)0x0e,Prot.PKT_DATA_SET, new byte[]{0});
-                    if( sendToBleDeviceGf(gatt, values)) {
+                    if(myBleDevice != null){
+                        myBleDevice.sendToMyBleDevice((byte)0x0e,Prot.PKT_DATA_SET, new byte[]{0});
                         dfu_ongoing = true;
                         pdlg_ota = ProgressDialog.show(MainActivity.this, "DFU", "ongoing...");
                     }
@@ -358,8 +292,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_getInfo:
                 if(myBle.isBleConnected()){
                     BluetoothGatt gatt = myBle.getCurrentBleGatt();
-                    byte[] values = Prot.pack((byte)0x02,Prot.PKT_DATA_GET, new byte[]{0});
-                    sendToBleDeviceGf(gatt, values);
+                    if(myBleDevice != null) {
+                        myBleDevice.sendToMyBleDevice((byte) 0x02, Prot.PKT_DATA_GET, new byte[]{0});
+                    }
                 }
                 break;
             case R.id.btn_connect:
@@ -390,5 +325,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         myBle.bleDisconnect();
         myBle.close();
         myApp.setBleHandler(null);
+    }
+
+    @Override
+    public void deviceReceive(byte cmd, byte dir, byte[] data) {
+        logAppend("recv " + MyUtil.toHexString(data));
     }
 }

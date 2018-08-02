@@ -4,14 +4,14 @@ import android.app.Application;
 import android.os.Handler;
 import android.os.Message;
 
-import com.ble.BleCallback;
-import com.ble.MyBle;
+import com.ble.myBle.MyBleCallback;
+import com.ble.myBle.MyBle;
 
 /**
  * Created by jhc on 2018/7/16.
  */
 
-public class MyApp extends Application implements BleCallback{
+public class MyApp extends Application implements MyBleCallback {
 
     private MyBle myBle;
     private Handler handler;

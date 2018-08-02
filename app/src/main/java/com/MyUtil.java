@@ -7,6 +7,10 @@ package com;
 public class MyUtil {
 
     public static String toHexString(byte []data){
+        if (data == null) {
+            return "";
+        }
+
         String r = "";
 
         for (int i = 0; i < data.length; i++) {

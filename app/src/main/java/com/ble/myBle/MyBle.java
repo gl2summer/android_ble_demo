@@ -1,29 +1,17 @@
-package com.ble;
+package com.ble.myBle;
 
 
-import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
-import android.os.Handler;
-import android.os.Message;
-import android.support.v4.app.ActivityCompat;
-import android.util.Log;
-import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 class BleDevice {
@@ -57,14 +45,14 @@ public class MyBle{
 
 
     private Context context;
-    private BleCallback callback;
+    private MyBleCallback callback;
 
     private BluetoothAdapter adapter;
 
     private BleDevice mBleDevice;
 
 
-    public MyBle(Context context, BleCallback callback) {
+    public MyBle(Context context, MyBleCallback callback) {
         this.context = context;
         this.callback = callback;
 
@@ -124,7 +112,11 @@ public class MyBle{
         return true;
     }
     public boolean close(){
-        context.unregisterReceiver(receiver);
+        try {
+            context.unregisterReceiver(receiver);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         return true;
     }
 

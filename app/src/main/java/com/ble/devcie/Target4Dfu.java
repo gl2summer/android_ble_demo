@@ -1,6 +1,8 @@
-package com.ble;
+package com.ble.devcie;
 
 import android.bluetooth.BluetoothDevice;
+
+import com.ble.myBle.MyBle;
 
 /**
  * Created by jhc on 2018/7/31.
